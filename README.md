@@ -231,6 +231,9 @@ from the assumption, not from sampling noise. Fixed assumptions are skipped.
 | `first_period_below(name, threshold)` / `runway(name, q)` | time to cross a threshold |
 | `summary()` | plain-text report with facts, beliefs and projections |
 | `provenance()` | dict with seed, inputs, notes and library version |
+| `percentile_table(names, q)` | tidy rows: period, output, mean, percentiles |
+| `to_csv(path, names, q)` | that table as CSV, with the disclaimer and inputs as `#` comment lines |
+| `to_dataframe(names, q)` | that table as a pandas DataFrame, provenance in `df.attrs` (needs `pip install "bizmc[pandas]"`) |
 
 ## What this library is not
 
@@ -243,7 +246,6 @@ from the assumption, not from sampling noise. Fixed assumptions are skipped.
 
 * Correlated assumptions (for example acquisition cost rising with volume).
 * Optional plotting helpers (fan charts) behind an extra dependency.
-* Export of results to CSV / pandas.
 
 Ideas and issues are welcome.
 
