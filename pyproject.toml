@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bizmc"
+version = "0.1.0"
+description = "Honest Monte Carlo simulations for small-business and SaaS planning: observed data, assumptions and projections kept apart."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "Gouthier" }]
+keywords = ["monte-carlo", "simulation", "forecasting", "saas", "cash-flow", "runway", "planning"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Office/Business",
+  "Typing :: Typed",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff==0.17.6"]
+
+[project.urls]
+Homepage = "https://github.com/Gouthier/bizmc"
+Issues = "https://github.com/Gouthier/bizmc/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bizmc"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src/bizmc"]
+addopts = "--doctest-modules"
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY"]
