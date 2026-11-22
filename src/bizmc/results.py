@@ -30,6 +30,11 @@ class SimulationResult:
 
     ``outputs[name]`` is an array of shape ``(n, periods)``: one row per
     simulated future, one column per period.
+
+    ``inputs[name]`` holds the values drawn for each assumption: shape
+    ``(n, 1)`` for ``vary="run"`` assumptions, ``(n, periods)`` for
+    ``vary="period"`` ones. They make it possible to ask *which* assumption
+    drives an outcome (see :mod:`bizmc.sensitivity`).
     """
 
     outputs: Mapping[str, np.ndarray]
@@ -41,6 +46,7 @@ class SimulationResult:
     periods: int
     period_label: str = "month"
     name: str = "simulation"
+    inputs: Mapping[str, np.ndarray] = field(default_factory=dict)
     kind: str = field(default="projection", init=False)
 
     # ------------------------------------------------------------------ access
