@@ -5,6 +5,8 @@
 * `bizmc.sensitivity`: `rank_correlations` (Spearman, from one run), `tornado`
   (one-at-a-time P10/P90 swings on any statistic, common random numbers) and
   `format_tornado`.
+* Export: `SimulationResult.percentile_table`, `to_csv` (provenance as comment lines)
+  and `to_dataframe` (optional pandas).
 * `SimulationResult.inputs` keeps the values drawn for each assumption.
 
 ## 0.1.0 - 2026-11-22
