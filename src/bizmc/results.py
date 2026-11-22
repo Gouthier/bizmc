@@ -6,6 +6,9 @@ follow from the assumptions, not predictions and certainly not guarantees.
 
 from __future__ import annotations
 
+import csv
+import io
+import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
@@ -119,6 +122,66 @@ class SimulationResult:
         # Periods are discrete and may be infinite: no interpolation.
         values = np.percentile(first, q, method="inverted_cdf")
         return {float(p): float(v) for p, v in zip(q, values, strict=True)}
+
+    # ---------------------------------------------------------------- export
+    def percentile_table(
+        self, names: Sequence[str] | None = None, q: Sequence[float] = (5, 50, 95)
+    ) -> list[dict[str, float | int | str]]:
+        """Tidy rows ``{"period", "output", "mean", "p5", "p50", ...}``,
+        one per period and output: small enough to share or chart anywhere."""
+        names = list(names) if names is not None else sorted(self.outputs)
+        rows: list[dict[str, float | int | str]] = []
+        for name in names:
+            pct = self.percentiles(name, q)
+            mean = self.mean(name)
+            for t in range(self.periods):
+                row: dict[str, float | int | str] = {
+                    "period": t + 1,
+                    "output": name,
+                    "mean": float(mean[t]),
+                }
+                for i, p in enumerate(q):
+                    row[f"p{p:g}"] = float(pct[i, t])
+                rows.append(row)
+        return rows
+
+    def to_csv(
+        self,
+        path: str | os.PathLike | None = None,
+        names: Sequence[str] | None = None,
+        q: Sequence[float] = (5, 50, 95),
+    ) -> str:
+        """Write :meth:`percentile_table` as CSV, preceded by ``#`` comment
+        lines carrying the disclaimer, seed and inputs. Returns the CSV text;
+        also writes it to ``path`` when given."""
+        rows = self.percentile_table(names, q)
+        buffer = io.StringIO()
+        prov = self.provenance()
+        buffer.write(f"# {DISCLAIMER}\n")
+        buffer.write(f"# {prov['library']} | {self.name} | n={self.n} | seed={self.seed}\n")
+        for key, value in self.observed.items():
+            buffer.write(f"# observed {key} = {value:g}\n")
+        for key, value in self.assumptions.items():
+            buffer.write(f"# assumption {key} ~ {value}\n")
+        writer = csv.DictWriter(buffer, fieldnames=list(rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+        text = buffer.getvalue()
+        if path is not None:
+            with open(path, "w", encoding="utf-8", newline="") as fh:
+                fh.write(text)
+        return text
+
+    def to_dataframe(self, names: Sequence[str] | None = None, q: Sequence[float] = (5, 50, 95)):
+        """:meth:`percentile_table` as a pandas DataFrame (pandas is optional
+        and only imported here). Provenance is stored in ``df.attrs``."""
+        try:
+            import pandas as pd
+        except ImportError as exc:  # pragma: no cover - depends on environment
+            raise ImportError("to_dataframe needs pandas: pip install pandas") from exc
+        df = pd.DataFrame(self.percentile_table(names, q))
+        df.attrs["provenance"] = self.provenance()
+        return df
 
     # ------------------------------------------------------------- reporting
     def provenance(self) -> dict:

@@ -52,3 +52,34 @@ def test_percentiles_mean_at():
 def test_unknown_output():
     with pytest.raises(KeyError, match="available"):
         make([[1]])["mrr"]
+
+
+def test_percentile_table():
+    r = make(np.arange(12).reshape(4, 3))
+    rows = r.percentile_table(q=(0, 100))
+    assert len(rows) == 3
+    assert rows[0] == {"period": 1, "output": "cash", "mean": 4.5, "p0": 0.0, "p100": 9.0}
+    assert rows[2]["period"] == 3
+
+
+def test_to_csv_roundtrip(tmp_path):
+    import csv
+
+    r = make(np.arange(12).reshape(4, 3))
+    path = tmp_path / "out.csv"
+    text = r.to_csv(path, q=(50,))
+    assert path.read_text(encoding="utf-8") == text
+    lines = text.splitlines()
+    assert lines[0].startswith("# Projection, not a forecast")
+    assert "seed=0" in lines[1]
+    data = list(csv.DictReader(line for line in lines if not line.startswith("#")))
+    assert [d["period"] for d in data] == ["1", "2", "3"]
+    assert float(data[1]["p50"]) == 5.5
+
+
+def test_to_dataframe():
+    pd = pytest.importorskip("pandas")
+    df = make(np.arange(12).reshape(4, 3)).to_dataframe()
+    assert isinstance(df, pd.DataFrame)
+    assert list(df.columns) == ["period", "output", "mean", "p5", "p50", "p95"]
+    assert df.attrs["provenance"]["kind"] == "projection"
