@@ -153,3 +153,13 @@ def test_provenance_and_labelling():
     text = result.summary()
     assert DISCLAIMER in text and "Observed data" in text and "Assumptions" in text
     assert "projection" in repr(result)
+
+
+def test_result_keeps_drawn_inputs():
+    result = runway_sim().run(n=50, seed=2)
+    assert set(result.inputs) == {"revenue", "costs"}
+    assert result.inputs["revenue"].shape == (50, 24)  # vary="period"
+    assert result.inputs["costs"].shape == (50, 1)  # vary="run"
+    np.testing.assert_allclose(
+        result["net_cash_flow"], result.inputs["revenue"] - result.inputs["costs"]
+    )

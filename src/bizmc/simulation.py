@@ -233,4 +233,5 @@ class Simulation:
             periods=self.periods,
             period_label=self.period_label,
             name=self.name,
+            inputs=draws,
         )

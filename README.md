@@ -183,6 +183,43 @@ sim = Simulation(
 
 Draws are read-only, outputs are shape-checked, and missing inputs are reported by name.
 
+### Sensitivity: which assumption matters most?
+
+```python
+from bizmc.sensitivity import format_tornado, rank_correlations, tornado
+
+# 1. Cheap: reuse one run, rank assumptions by Spearman correlation with an outcome.
+for row in rank_correlations(sim.run(n=10_000, seed=42), "cash"):
+    print(f"{row.assumption:<14} {row.rho:+.2f}")
+
+# 2. Tornado: pin each assumption at its P10, then P90, and measure any statistic.
+baseline, swings = tornado(
+    sim, lambda r: r.probability("cash", below=0, when="any"), n=5_000, seed=42
+)
+print(format_tornado(baseline, swings))
+```
+
+```text
+churn          -0.81
+cac            -0.33
+gross_margin   +0.23
+new_customers  +0.11
+fixed_costs    +0.00
+
+baseline: 0.4106
+churn          ##############################        0.0298 .. 0.9212        (at 0.02075 .. 0.0468)
+new_customers  ####################                  0.7816 .. 0.1762        (at 3.432 .. 6.951)
+cac            ##############                        0.2272 .. 0.632         (at 367.9 .. 610.1)
+gross_margin   #########                              0.551 .. 0.2892        (at 0.7534 .. 0.827)
+```
+
+The two views answer different questions. Rank correlations show what explains the
+spread *within* one run. The tornado shows what happens if a belief turns out low or
+high for the whole horizon: `new_customers` varies month to month, so its random
+ups and downs average out within a run (weak correlation), yet being wrong about its
+*level* moves the risk a lot. Tornado runs share their random numbers, so swings come
+from the assumption, not from sampling noise. Fixed assumptions are skipped.
+
 ### Results
 
 | Method | Returns |
@@ -205,7 +242,6 @@ Draws are read-only, outputs are shape-checked, and missing inputs are reported 
 ## Roadmap
 
 * Correlated assumptions (for example acquisition cost rising with volume).
-* Sensitivity analysis: which assumption moves the outcome most.
 * Optional plotting helpers (fan charts) behind an extra dependency.
 * Export of results to CSV / pandas.
 

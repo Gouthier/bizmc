@@ -6,7 +6,7 @@ reproducible from a seed, and results are labelled as projections.
 
 __version__ = "0.1.0"
 
-from . import models  # noqa: E402
+from . import models, sensitivity  # noqa: E402
 from .distributions import (  # noqa: E402
     PERT,
     Beta,
@@ -38,4 +38,5 @@ __all__ = [
     "Triangular",
     "Uniform",
     "models",
+    "sensitivity",
 ]
